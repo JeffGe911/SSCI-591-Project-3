@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>SoCal Sky Now — live airport weather | SSCI 591 Project 3</title>
+    <!-- Load the ArcGIS Maps SDK for JavaScript from CDN (core + components + CSS, one tag) -->
+    <script type="module" src="https://js.arcgis.com/5.1/"></script>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+        background: #f6f6f6;
+        color: #1f2937;
+      }
+      header {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 16px 16px 8px;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 1.5rem;
+      }
+      p {
+        margin: 0 0 6px;
+        line-height: 1.45;
+        font-size: 0.95rem;
+      }
+      #status {
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+      /* Give the map a fixed height so the text above has room (Step 5) */
+      arcgis-map {
+        display: block;
+        height: 75vh;
+      }
+      footer {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 8px 16px 16px;
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+      a {
+        color: #1d4ed8;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>SoCal Sky Now — live airport weather</h1>
+      <p>
+        <strong>About this map.</strong> Every dot is an airport weather station reporting a METAR observation,
+        coloured by its current <em>flight category</em> (VFR = clear flying weather, LIFR = fog or very low cloud).
+        Click a station to see live temperature, wind, visibility and sky condition. The data comes straight from the
+        <a
+          href="https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NOAA_METAR_current_wind_speed_direction_v1/FeatureServer/0"
+          target="_blank"
+          rel="noopener"
+          >NOAA METAR current weather feed in ArcGIS Living Atlas</a
+        >, a live feature service that NOAA and Esri refresh about once an hour, so the map changes on its own.
+        I started from Esri's <em>Intro to FeatureLayer</em> sample and changed the dataset, the basemap, the centre and zoom
+        (Southern California), the renderer (flight category colours), the popup, and added a Legend and a Search box.
+        Zoom out to see every reporting airport in the world.
+      </p>
+      <p id="status">Loading live METAR data…</p>
+    </header>
+
+    <!-- Free basemap names (no API key): topo-vector, streets-vector, gray-vector, dark-gray-vector, satellite, hybrid, osm -->
+    <arcgis-map basemap="dark-gray-vector" center="-118.25, 33.95" zoom="8">
+      <arcgis-zoom slot="top-left"></arcgis-zoom>
+      <arcgis-home slot="top-left"></arcgis-home>
+      <arcgis-search slot="top-right" placeholder="Find an airport or place"></arcgis-search>
+      <!-- Step 4 component: Legend, wrapped in Expand so it folds away on a phone -->
+      <arcgis-expand slot="bottom-left" expanded>
+        <arcgis-legend></arcgis-legend>
+      </arcgis-expand>
+      <arcgis-basemap-toggle slot="bottom-right" next-basemap="satellite"></arcgis-basemap-toggle>
+    </arcgis-map>
+
+    <footer>
+      Data: NOAA / Esri Living Atlas live feed (updates hourly, times in UTC). Built with the ArcGIS Maps SDK for JavaScript 5.1.
+      SSCI 591 Project 3 · Yuqi (Jeff) Ge.
+    </footer>
+
+    <script type="module">
+      const FeatureLayer = await $arcgis.import("@arcgis/core/layers/FeatureLayer.js");
+
+      const viewElement = document.querySelector("arcgis-map");
+      await viewElement.viewOnReady(); // Wait for the map and view to be ready.
+
+      // ---- Step 2/3: renderer. Colour each station by FLT_CATEGORY (standard aviation colours). ----
+      const outline = { color: [255, 255, 255, 0.6], width: 0.5 };
+      const marker = (color) => ({ type: "simple-marker", size: 9, color, outline });
+      const renderer = {
+        type: "unique-value", // autocasts as new UniqueValueRenderer()
+        field: "FLT_CATEGORY",
+        legendOptions: { title: "Flight category (right now)" },
+        defaultSymbol: marker("#9ca3af"),
+        defaultLabel: "Not reported",
+        uniqueValueInfos: [
+          { value: "VFR", label: "VFR — visual (good)", symbol: marker("#22c55e") },
+          { value: "MVFR", label: "MVFR — marginal", symbol: marker("#3b82f6") },
+          { value: "IFR", label: "IFR — instrument (poor)", symbol: marker("#ef4444") },
+          { value: "LIFR", label: "LIFR — low instrument (fog)", symbol: marker("#d946ef") },
+        ],
+      };
+
+      // ---- Step 3: the live layer. Field names must match the service exactly (case matters). ----
+      const fieldInfos = [
+        { fieldName: "ICAO", label: "Station code" },
+        { fieldName: "FLT_CATEGORY", label: "Flight category" },
+        { fieldName: "TEMP", label: "Air temperature (°F)", format: { places: 0 } },
+        { fieldName: "WIND_SPEED", label: "Wind speed (km/h)" },
+        { fieldName: "WIND_DIRECT", label: "Wind from (degrees)" },
+        { fieldName: "VISIBILITY", label: "Visibility (m)", format: { digitSeparator: true, places: 0 } },
+        { fieldName: "R_HUMIDITY", label: "Relative humidity (%)" },
+        { fieldName: "SKY_CONDTN", label: "Sky condition" },
+        { fieldName: "OBS_DATETIME", label: "Observed (UTC)", format: { dateFormat: "short-date-short-time" } },
+      ];
+
+      const metarLayer = new FeatureLayer({
+        url: "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/NOAA_METAR_current_wind_speed_direction_v1/FeatureServer/0",
+        title: "Airport weather stations (NOAA METAR, live)",
+        outFields: ["*"],
+        renderer,
+        popupTemplate: {
+          title: "{STATION_NAME} ({ICAO})",
+          content: [
+            { type: "text", text: "<b>{WEATHER}</b>" },
+            { type: "fields", fieldInfos },
+          ],
+        },
+      });
+
+      viewElement.map.add(metarLayer);
+
+      // ---- A small live status line: how many stations are in view and when the newest observation was taken. ----
+      const status = document.querySelector("#status");
+      async function updateStatus() {
+        try {
+          const query = metarLayer.createQuery();
+          query.geometry = viewElement.view.extent; // only count what is on screen
+          query.outStatistics = [
+            { statisticType: "count", onStatisticField: "OBJECTID", outStatisticFieldName: "n" },
+            { statisticType: "max", onStatisticField: "OBS_DATETIME", outStatisticFieldName: "latest" },
+          ];
+          const { features } = await metarLayer.queryFeatures(query);
+          const { n, latest } = features[0].attributes;
+          const when = latest ? new Date(latest).toLocaleString() : "unknown";
+          status.textContent = `${n} stations in view · newest observation ${when} (your local time)`;
+        } catch (err) {
+          status.textContent = "Live data could not be loaded — open the console (F12) for details.";
+          console.error(err);
+        }
+      }
+
+      await viewElement.whenLayerView(metarLayer); // Wait for the layer to be usable.
+      updateStatus();
+      // Re-count whenever the user stops panning/zooming.
+      const reactiveUtils = await $arcgis.import("@arcgis/core/core/reactiveUtils.js");
+      reactiveUtils.when(
+        () => viewElement.view.stationary === true,
+        () => updateStatus()
+      );
+    </script>
+  </body>
+</html>
