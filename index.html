@@ -144,28 +144,31 @@
       async function updateStatus() {
         try {
           const query = metarLayer.createQuery();
-          query.geometry = viewElement.view.extent; // only count what is on screen
+          const extent = viewElement.view?.extent;
+          if (!extent) return; // view still initialising; the stationary watcher will call us again
+          query.geometry = extent; // only count what is on screen
           query.outStatistics = [
             { statisticType: "count", onStatisticField: "OBJECTID", outStatisticFieldName: "n" },
             { statisticType: "max", onStatisticField: "OBS_DATETIME", outStatisticFieldName: "latest" },
           ];
           const { features } = await metarLayer.queryFeatures(query);
+          if (!features.length) return;
           const { n, latest } = features[0].attributes;
           const when = latest ? new Date(latest).toLocaleString() : "unknown";
           status.textContent = `${n} stations in view · newest observation ${when} (your local time)`;
         } catch (err) {
           status.textContent = "Live data could not be loaded — open the console (F12) for details.";
-          console.error(err);
+          console.error("Status query failed:", err.message || err);
         }
       }
 
       await viewElement.whenLayerView(metarLayer); // Wait for the layer to be usable.
-      updateStatus();
-      // Re-count whenever the user stops panning/zooming.
+      // Count once the view is stationary, and again whenever the user stops panning/zooming.
       const reactiveUtils = await $arcgis.import("@arcgis/core/core/reactiveUtils.js");
       reactiveUtils.when(
-        () => viewElement.view.stationary === true,
-        () => updateStatus()
+        () => viewElement.view?.stationary === true,
+        () => updateStatus(),
+        { initial: true }
       );
     </script>
   </body>
