@@ -3,7 +3,7 @@
 **Live page:** https://jeffge911.github.io/SSCI-591-Project-3/
 **Repository:** https://github.com/JeffGe911/SSCI-591-Project-3
 
-SSCI 591 Web & Mobile GIS · Project 3 · Yuqi (Jeff) Ge · Fall 2026
+SSCI 591 Web & Mobile GIS · Project 3 · Yuqi (Jeff) Ge
 
 ## What this map shows
 
