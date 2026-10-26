@@ -7,7 +7,7 @@ SSCI 591 Web & Mobile GIS · Project 3 · Yuqi (Jeff) Ge
 
 ## What this map shows
 
-Every airport weather station reporting a METAR observation, centred on Southern California and zoomable to the whole world. Each dot is coloured by its current flight category (VFR, MVFR, IFR, LIFR). Clicking a station shows live temperature, wind, visibility, sky condition and observation time. The feed refreshes about once an hour, so the map changes on its own.
+My thoughts start with thinking of observe something that is unique in Southern California. In my map, every airport weather station reports a METAR observation, centred on Southern California and zoomable to the whole world. Each dot is coloured by its current flight category (VFR, MVFR, IFR, LIFR). Clicking a station shows live temperature, wind, visibility, sky condition and observation time. The feed refreshes about once an hour, so the map changes on its own.
 
 ## Starting sample
 
