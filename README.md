@@ -40,4 +40,4 @@ The status line failed on first deploy because the statistics query ran before t
 
 ## Credits
 
-Data: NOAA, published by Esri in ArcGIS Living Atlas. Sample and basemaps: Esri. AI tools: I used Claude (Anthropic) to look up the 5.1 boilerplate and field list, draft the renderer and popup code, and proofread this README. I reviewed and tested every line and can explain the code.
+Data: NOAA, published by Esri in ArcGIS Living Atlas. Sample and basemaps: Esri. AI tools: I used Chatgpt to proof read and debug my code, and proofread this README. I reviewed and tested every line before using ai.
