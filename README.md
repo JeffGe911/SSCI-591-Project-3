@@ -38,4 +38,4 @@ The status line failed on first deploy because the statistics query ran before t
 
 ## Credits
 
-Data: NOAA, published bny Esri in ArcGIS Living Atlas. Sample and basemaps: Esri. AI tools: I used Chatgpt to review my design and debug ideas, and to proofread this README. I reviewed and tested every line and can explain the code.
+Data: NOAA, published bny Esri in ArcGIS Living Atlas. Sample and basemaps: Esri. AI tools: I used Chatgpt to review my design and debug ideas, and to proofread this README. I reviewed and tested every line myself before using ai to debug.
